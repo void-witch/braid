@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@require[@for-label["../braid.rkt" racket]]
+@require[@for-label[braid racket]]
 
 @title{braid}
 @author{void-witch}
