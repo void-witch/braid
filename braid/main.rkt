@@ -18,66 +18,87 @@
 
 ;; Code here
 
-(module+ braid
-  (require openssl/md5)
-  (require racket)
+(require openssl/md5)
+(require racket)
+(require data/gvector)
+(require "jsconverters.rkt")
 
-  (provide node
-           p
-           link
-           linkreplace
-           nodes)
+(provide node
+         p
+         link
+         linkreplace
+         nodes
+         head)
+(provide (all-from-out "jsconverters.rkt"))
 
-  (define node-map (make-hash))
+(define node%
+  (class object%
+    (init name content)
 
-  (define (head)
-    @~a{
-      <head>
-        <script>
-          function linkReplace(el) {
-            let linkreplaceDiv = el.parentElement;
-            let linkreplaceAfter = linkreplaceDiv.getElementsByClassName("linkreplace-after")[0];
-            el.style.display = "none";
-            linkreplaceAfter.style.display = "initial";
+    (define self-name name)
+    (define self-content content)
+    (define self-hash (call-with-input-string name md5))
+
+    (super-new)
+
+    (define/public (get-name) self-name)
+    (define/public (set-name new-name)
+      (set! self-name new-name)
+      (set! self-hash (call-with-input-string self-name md5)))
+
+    (define/public (get-content) self-content)
+    (define/public (set-content new-content)
+      (set! self-content new-content))
+
+    (define/public (get-hash) self-hash)))
+
+(define node-map (make-hash))
+
+(define (head [node-map node-map])
+  @~a{
+    <head>
+      <script>
+      function linkReplace(el) {
+          let linkreplaceDiv = el.parentElement;
+          let linkreplaceAfter = linkreplaceDiv.getElementsByClassName("linkreplace-after")[0];
+          el.style.display = "none";
+          linkreplaceAfter.style.display = "initial";
           }
-        </script>
-        <style>
-          .linkreplace-hide {
-            display: none;
-          }
-        </style>
-      </head>})
+      @|(format "~a" (gvector->list (hash->js node-map "nodes")))|
+      </script>
+      <style>
+        .linkreplace-hide {
+          display: none;
+        }
+      </style>
+    </head>})
 
-  (define (node name body)
-    (let ([nodeval @~a{
-                       @|(head)|
-                       <body>
-                         @|body|
-                       </body>}])
-      (hash-set! node-map
-                 name
-                 (list (md5 (open-input-string name)) nodeval))
-      nodeval))
+(define (node name body)
+  (let ([nodeobj (new node% [name name] [content body])])
+    (hash-set! node-map
+               name
+               nodeobj)
+    nodeobj))
 
-  (define (nodes) (hash-copy node-map))
+(define (nodes) (hash-copy node-map))
 
-  (define (p . body)
-    @~a{<p>@|(string-join body "")|</p>})
+(define (p . body)
+  @~a{<p>@|(string-join body "")|</p>})
 
-  (define (link target-node [text target-node])
-    (let ([location (car (hash-ref node-map target-node))])
-      @~a{<a href="@|location|.html">@|text|</a>}))
+(define (link target-name [text target-name])
+  (let ([location (call-with-input-string target-name md5)])
+    @~a{<a href="#@|location|">@|text|</a>}))
 
-  (define (linkreplace before after)
-    @~a{
-      <div class="linkreplace">
-        <div class="linkreplace-before linkreplace-show" onclick="linkReplace(this)">
-          @|before|
-        </div>
-        <div class="linkreplace-after linkreplace-hide">
-          @|after|
-        <div>
-      </div>}))
+(define (linkreplace before after)
+  @~a{
+    <div class="linkreplace">
+      <div class="linkreplace-before linkreplace-show" onclick="linkReplace(this)">
+        @|before|
+      </div>
+      <div class="linkreplace-after linkreplace-hide">
+        @|after|
+      <div>
+    </div>})
 
 #| (require 'braid)
 
