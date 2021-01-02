@@ -21,7 +21,6 @@
 (require openssl/md5)
 (require racket)
 (require data/gvector)
-(require "jsconverters.rkt")
 
 (provide node
          p
@@ -29,7 +28,6 @@
          linkreplace
          nodes
          head)
-(provide (all-from-out "jsconverters.rkt"))
 
 (define node%
   (class object%
