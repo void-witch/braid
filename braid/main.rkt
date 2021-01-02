@@ -50,7 +50,10 @@
     (define/public (set-content new-content)
       (set! self-content new-content))
 
-    (define/public (get-hash) self-hash)))
+    (define/public (get-hash) self-hash)
+
+    (define/public (node->js)
+      @~a{{name:@|self-name|, hash:@|self-hash|, content:@|self-content|}})))
 
 (define node-map (make-hash))
 
