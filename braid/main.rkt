@@ -73,8 +73,8 @@
       </style>
     </head>})
 
-(define (node name body)
-  (let ([nodeobj (new node% [name name] [content body])])
+(define (node name . body)
+  (letrec ([content (apply string-append body)] [nodeobj (new node% [name name] [content content])])
     (hash-set! node-map
                name
                nodeobj)
