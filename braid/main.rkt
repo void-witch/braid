@@ -51,7 +51,7 @@
     (define/public (get-hash) self-hash)
 
     (define/public (node->js)
-      @~a{{name:@|self-name|, hash:@|self-hash|, content:@|self-content|}})))
+      @~a{{name:"@|self-name|", hash:"@|self-hash|", content:"@|self-content|"}})))
 
 (define node-map (make-hash))
 
@@ -65,7 +65,7 @@
           el.style.display = "none";
           linkreplaceAfter.style.display = "initial";
           }
-      @|(format "~a" (gvector->list (hash->js node-map "nodes")))|
+      let nodes = [@|(string-join (map (lambda (el) (send el node->js)) (hash-values node-map)) ",")|];
       </script>
       <style>
         .linkreplace-hide {
